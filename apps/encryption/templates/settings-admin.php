@@ -5,11 +5,35 @@ script('encryption', 'settings-admin');
 style('encryption', 'settings-admin');
 ?>
 <form id="ocDefaultEncryptionModule" class="sub-section">
-	<h2 class="app-name"><?php p($l->t('Encryption')); ?></h2>
+	<h2 class="app-name"><?php p($l->t('Default encryption module')); ?></h2>
 	<?php if(!$_["initStatus"]): ?>
 		<?php p($l->t("Encryption App is enabled but your keys are not initialized, please log-out and log-in again")); ?>
 	<?php else: ?>
-		<p id="encryptHomeStorageSetting">
+		<label id="encryptionType">
+			<?php
+			$masterKey = \OC::$server->getAppConfig()->getValue('encryption', 'useMasterKey', '0');
+			$homeEncryption = \OC::$server->getAppConfig()->getValue('encryption', 'encryptHomeStorage', 'empty');
+			if($masterKey !== '0') {
+				p($l->t("Encryption type: Master Key"));
+			} else {
+				if($homeEncryption !== "empty") {
+					p($l->t("Encryption type: User Specific Key"));
+				}
+			}
+			?>
+		</label>
+		<p id="encryptionKeySelection">
+			<select id="keyTypeId" name="keyType">
+				<option value="nokey"><?php p($l->t("Please select an encryption option"))?></option>
+				<option value="masterkey" <?php echo \OC::$server->getAppConfig()->getValue('encryption', 'useMasterKey', '0') !== '0' ? 'selected="selected"' : ''; ?>><?php p($l->t("Master Key"))?></option>
+				<option value="customkey"><?php p($l->t("User-specific Key"))?></option>
+			</select>
+			<button id="select-mode" type="button" class="hidden"><?php p($l->t("Select this mode"));?></button>
+
+		</p>
+		<br />
+
+		<p id="encryptHomeStorageSetting" class="hidden">
 			<input type="checkbox" class="checkbox" name="encrypt_home_storage" id="encryptHomeStorage"
 				   value="1" <?php if ($_['encryptHomeStorage']) print_unescaped('checked="checked"'); ?> />
 			<label for="encryptHomeStorage"><?php p($l->t('Encrypt the home storage'));?></label></br>
@@ -17,7 +41,7 @@ style('encryption', 'settings-admin');
 		</p>
 		<br />
 		<?php if($_['masterKeyEnabled'] === false): ?>
-			<p id="encryptionSetRecoveryKey">
+			<p id="encryptionSetRecoveryKey" class="hidden">
 				<?php $_["recoveryEnabled"] === '0' ?  p($l->t("Enable recovery key")) : p($l->t("Disable recovery key")); ?>
 				<span class="msg"></span>
 				<br/>

@@ -8,7 +8,77 @@
  */
 
 $(document).ready(function () {
-	
+
+	//This function is to arrange the display of the encryption page
+	//in the settings.
+	function encryptionTypeSelection(encryptionType, state=undefined) {
+		if (encryptionType === "masterkey") {
+			//If user selects "Master Key" from the drop down
+			$("#select-mode").removeClass("hidden");
+
+			$("#encryptHomeStorageSetting, #encryptionSetRecoveryKey").addClass("hidden");
+
+			if(state === "static") {
+				$("#select-mode, #keyTypeId").addClass("hidden");
+				$("#encryptHomeStorage, #encryptionSetRecoveryKey").addClass("hidden");
+				if($("#encryptionType").text().trim().length === 0) {
+					$("#encryptionType").text("Encryption type: Master Key");
+				}
+			}
+		} else if (encryptionType === "customkey") {
+			//If user selects "User-specific key" from the drop down
+			$("#select-mode").removeClass("hidden");
+
+			$("#encryptHomeStorageSetting, #encryptionSetRecoveryKey").removeClass("hidden");
+
+			if(state === "static") {
+				$("#keyTypeId, #select-mode").addClass("hidden");
+			}
+		} else {
+			//If user selects "Please sect an encryption option" from the drop down
+			$("#select-mode").addClass("hidden");
+			$("#encryptHomeStorageSetting, #encryptionSetRecoveryKey").addClass("hidden");
+		}
+
+	}
+
+	encryptionTypeSelection($("#keyTypeId :selected").val(), "static");
+
+	OC.AppConfig.getValue("encryption", "useMasterKey", function ($value) {
+		if($value === "") {
+			OC.AppConfig.getValue("encryption", "encryptHomeStorage", function ($homevalue) {
+				if ($homevalue !== '') {
+
+					encryptionTypeSelection("customkey", "static");
+				}
+			});
+		}
+	});
+
+	$("#keyTypeId").change(function (element) {
+		encryptionTypeSelection($("#keyTypeId :selected").val());
+	});
+
+	$("#select-mode").click(function () {
+		//Action to be taken when "Select this mode" button is selected.
+		$("#select-mode,#keyTypeId").addClass("hidden");
+		if($("#keyTypeId :selected").val() === "masterkey") {
+			$.when(OC.AppConfig.setValue("encryption", "encryptHomeStorage", '0'),
+				OC.AppConfig.setValue('encryption', 'useMasterKey', '1')).then(function () {
+					location.reload();
+			});
+		} else if($("#keyTypeId :selected").val() === "customkey") {
+			if($("#encryptHomeStorage").prop("checked") === true) {
+				OC.AppConfig.setValue("encryption", "encryptHomeStorage", '1');
+			} else {
+				OC.AppConfig.setValue("encryption", "encryptHomeStorage", '0');
+			}
+			if($("#encryptionType").text().trim().length === 0) {
+				$("#encryptionType").text("Encryption type: User Specific Key");
+			}
+		}
+	});
+
 	$('input:button[name="enableRecoveryKey"]').click(function () {
 
 		var recoveryStatus = $(this).attr('status');
